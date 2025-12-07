@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    
+    <!-- Main Menu -->
+    <menuitem id="menu_appointment_root"
+        name="Appointments"
+        sequence="100"
+        web_icon="external_appointment_scheduler,static/description/icon.png"/>
+    
+    <!-- Appointments submenu -->
+    <menuitem id="menu_appointment_appointments"
+        name="Appointments"
+        parent="menu_appointment_root"
+        sequence="10"/>
+    
+    <menuitem id="menu_appointment_all"
+        name="All Appointments"
+        parent="menu_appointment_appointments"
+        action="action_external_appointment"
+        sequence="10"/>
+    
+    <!-- Configuration submenu -->
+    <menuitem id="menu_appointment_configuration"
+        name="Configuration"
+        parent="menu_appointment_root"
+        sequence="90"
+        groups="external_appointment_scheduler.group_appointment_manager"/>
+    
+    <menuitem id="menu_appointment_services"
+        name="Services"
+        parent="menu_appointment_configuration"
+        action="action_external_appointment_service"
+        sequence="10"/>
+    
+    <menuitem id="menu_appointment_calendar_config"
+        name="Calendar Providers"
+        parent="menu_appointment_configuration"
+        action="action_external_calendar_config"
+        sequence="20"/>
+
+</odoo>

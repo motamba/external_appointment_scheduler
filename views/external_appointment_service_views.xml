@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    
+    <!-- Service List View -->
+    <record id="view_external_appointment_service_tree" model="ir.ui.view">
+        <field name="name">external.appointment.service.list</field>
+        <field name="model">external.appointment.service</field>
+        <field name="arch" type="xml">
+            <list string="Services">
+                <field name="sequence" widget="handle"/>
+                <field name="name"/>
+                <field name="duration_minutes"/>
+                <field name="price" widget="monetary"/>
+                <field name="appointment_count"/>
+                <field name="active" widget="boolean_toggle"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Service Form View -->
+    <record id="view_external_appointment_service_form" model="ir.ui.view">
+        <field name="name">external.appointment.service.form</field>
+        <field name="model">external.appointment.service</field>
+        <field name="arch" type="xml">
+            <form string="Service">
+                <sheet>
+                    <widget name="web_ribbon" title="Archived" bg_color="bg-danger" invisible="active"/>
+                    <field name="image_1920" widget="image" class="oe_avatar"/>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" placeholder="Service Name"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group name="basic_info">
+                            <field name="active" invisible="1"/>
+                            <field name="sequence"/>
+                            <field name="duration_minutes"/>
+                            <field name="buffer_minutes"/>
+                            <field name="capacity"/>
+                        </group>
+                        <group name="pricing">
+                            <field name="currency_id" invisible="1"/>
+                            <field name="price" widget="monetary"/>
+                            <field name="color" widget="color_picker"/>
+                        </group>
+                    </group>
+                    
+                    <notebook>
+                        <page string="Description" name="description">
+                            <field name="description" placeholder="Add service description..."/>
+                        </page>
+                        <page string="Booking Rules" name="booking_rules">
+                            <group>
+                                <group name="lead_times">
+                                    <field name="min_lead_hours"/>
+                                    <field name="max_lead_days"/>
+                                </group>
+                                <group name="cancellation">
+                                    <field name="allow_cancellation"/>
+                                    <field name="cancellation_hours" invisible="not allow_cancellation"/>
+                                    <field name="allow_reschedule"/>
+                                </group>
+                            </group>
+                        </page>
+                        <page string="Calendar Provider" name="provider">
+                            <group>
+                                <field name="provider_id"/>
+                                <field name="calendar_id"/>
+                            </group>
+                        </page>
+                        <page string="Appointments" name="appointments">
+                            <field name="appointment_ids" readonly="1">
+                                <list>
+                                    <field name="name"/>
+                                    <field name="partner_id"/>
+                                    <field name="start_datetime"/>
+                                    <field name="status"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Service Kanban View -->
+    <record id="view_external_appointment_service_kanban" model="ir.ui.view">
+        <field name="name">external.appointment.service.kanban</field>
+        <field name="model">external.appointment.service</field>
+        <field name="arch" type="xml">
+            <kanban string="Services">
+                <field name="id"/>
+                <field name="name"/>
+                <field name="duration_minutes"/>
+                <field name="price"/>
+                <field name="appointment_count"/>
+                <field name="color"/>
+                <templates>
+                    <t t-name="kanban-box">
+                        <div t-attf-class="oe_kanban_card oe_kanban_global_click" t-attf-style="border-left: 4px solid #{kanban_color(record.color.raw_value)};">
+                            <div class="o_kanban_image">
+                                <img t-att-src="kanban_image('external.appointment.service', 'image_128', record.id.raw_value)" alt="Service"/>
+                            </div>
+                            <div class="oe_kanban_details">
+                                <strong class="o_kanban_record_title"><field name="name"/></strong>
+                                <div>
+                                    <i class="fa fa-clock-o" title="Duration"></i> <field name="duration_minutes"/> min
+                                </div>
+                                <div>
+                                    <i class="fa fa-money" title="Price"></i> <field name="price"/> <field name="currency_id"/>
+                                </div>
+                                <div class="o_kanban_record_bottom">
+                                    <button name="action_view_appointments" type="object" class="btn btn-sm btn-link">
+                                        <field name="appointment_count"/> Appointments
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <!-- Service Action -->
+    <record id="action_external_appointment_service" model="ir.actions.act_window">
+        <field name="name">Services</field>
+        <field name="res_model">external.appointment.service</field>
+        <field name="view_mode">kanban,list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create your first service
+            </p>
+            <p>
+                Define services that customers can book appointments for.
+            </p>
+        </field>
+    </record>
+
+</odoo>

@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    
+    <!-- Reschedule Wizard Form -->
+    <record id="view_appointment_reschedule_wizard_form" model="ir.ui.view">
+        <field name="name">appointment.reschedule.wizard.form</field>
+        <field name="model">appointment.reschedule.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Reschedule Appointment">
+                <group>
+                    <field name="appointment_id" invisible="1"/>
+                    <field name="service_id"/>
+                    <field name="old_start_datetime"/>
+                    <field name="new_start_datetime" required="1"/>
+                    <field name="new_end_datetime" readonly="1"/>
+                </group>
+                <group>
+                    <field name="reason" placeholder="Optional reason for rescheduling..."/>
+                </group>
+                <footer>
+                    <button string="Confirm Reschedule" name="action_confirm_reschedule" type="object" class="btn-primary"/>
+                    <button string="Cancel" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+</odoo>

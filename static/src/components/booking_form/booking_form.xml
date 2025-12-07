@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+    <t t-name="external_appointment_scheduler.BookingForm">
+        <div class="ea-booking-form">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="fa fa-calendar-check-o mr-2"/>
+                        Confirm Your Appointment
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info mb-3">
+                        <strong>Selected Time:</strong><br/>
+                        <t t-esc="formatDate(props.slot.start)"/>
+                    </div>
+
+                    <form t-on-submit="onSubmitForm">
+                        <div class="form-group">
+                            <label for="ea-name" class="required">Full Name</label>
+                            <input 
+                                type="text" 
+                                id="ea-name"
+                                class="form-control" 
+                                t-model="state.name"
+                                required="required"
+                                placeholder="John Doe"
+                            />
+                        </div>
+
+                        <div class="form-group">
+                            <label for="ea-email" class="required">Email Address</label>
+                            <input 
+                                type="email" 
+                                id="ea-email"
+                                class="form-control" 
+                                t-model="state.email"
+                                required="required"
+                                placeholder="john.doe@example.com"
+                            />
+                        </div>
+
+                        <div class="form-group">
+                            <label for="ea-phone">Phone Number</label>
+                            <input 
+                                type="tel" 
+                                id="ea-phone"
+                                class="form-control" 
+                                t-model="state.phone"
+                                placeholder="+1 (555) 123-4567"
+                            />
+                        </div>
+
+                        <div class="form-group">
+                            <label for="ea-notes">Additional Notes</label>
+                            <textarea 
+                                id="ea-notes"
+                                class="form-control" 
+                                t-model="state.notes"
+                                rows="3"
+                                placeholder="Any specific requirements or questions..."
+                            />
+                        </div>
+
+                        <div class="form-group mb-0 text-right">
+                            <button 
+                                type="button" 
+                                class="btn btn-secondary mr-2"
+                                t-on-click="onCancelForm"
+                                t-att-disabled="state.submitting"
+                            >
+                                <i class="fa fa-arrow-left"/> Back
+                            </button>
+                            <button 
+                                type="submit" 
+                                class="btn btn-primary"
+                                t-att-disabled="state.submitting"
+                            >
+                                <t t-if="state.submitting">
+                                    <i class="fa fa-spinner fa-spin"/> Booking...
+                                </t>
+                                <t t-else="">
+                                    <i class="fa fa-check"/> Confirm Booking
+                                </t>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </t>
+
+</templates>

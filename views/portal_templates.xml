@@ -1,0 +1,198 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    
+    <!-- Portal My Appointments List -->
+    <template id="portal_my_appointments" name="My Appointments">
+        <t t-call="portal.portal_layout">
+            <t t-set="breadcrumbs_searchbar" t-value="True"/>
+            
+            <t t-call="portal.portal_searchbar">
+                <t t-set="title">Appointments</t>
+            </t>
+            
+            <t t-if="not appointments">
+                <div class="alert alert-info" role="alert">
+                    <p>You don't have any appointments yet.</p>
+                    <a href="/book" class="btn btn-primary">Book an Appointment</a>
+                </div>
+            </t>
+            <t t-if="appointments" t-call="portal.portal_table">
+                <thead>
+                    <tr class="active">
+                        <th>Reference</th>
+                        <th>Service</th>
+                        <th>Date &amp; Time</th>
+                        <th>Status</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <t t-foreach="appointments" t-as="appointment">
+                        <tr>
+                            <td><a t-att-href="'/my/appointments/' + str(appointment.id)"><t t-esc="appointment.name"/></a></td>
+                            <td><t t-esc="appointment.service_id.name"/></td>
+                            <td><t t-esc="appointment.start_datetime" t-options="{'widget': 'datetime'}"/></td>
+                            <td>
+                                <span t-if="appointment.status == 'draft'" class="badge badge-secondary">Draft</span>
+                                <span t-if="appointment.status == 'confirmed'" class="badge badge-success">Confirmed</span>
+                                <span t-if="appointment.status == 'completed'" class="badge badge-primary">Completed</span>
+                                <span t-if="appointment.status == 'cancelled'" class="badge badge-danger">Cancelled</span>
+                                <span t-if="appointment.status == 'no_show'" class="badge badge-warning">No Show</span>
+                            </td>
+                            <td class="text-right">
+                                <a t-att-href="'/my/appointments/' + str(appointment.id)" class="btn btn-sm btn-secondary">
+                                    <i class="fa fa-eye"/> View
+                                </a>
+                            </td>
+                        </tr>
+                    </t>
+                </tbody>
+            </t>
+        </t>
+    </template>
+
+    <!-- Portal Appointment Detail Page -->
+    <template id="portal_appointment_page" name="Appointment Details">
+        <t t-call="portal.portal_layout">
+            <t t-set="o" t-value="appointment"/>
+            
+            <div class="container mt-3">
+                <div class="row">
+                    <div class="col-lg-12">
+                        <div class="card">
+                            <div class="card-header">
+                                <h3>
+                                    <t t-esc="appointment.name"/>
+                                    <span t-if="appointment.status == 'confirmed'" class="badge badge-success float-right">Confirmed</span>
+                                    <span t-if="appointment.status == 'cancelled'" class="badge badge-danger float-right">Cancelled</span>
+                                    <span t-if="appointment.status == 'completed'" class="badge badge-primary float-right">Completed</span>
+                                </h3>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <h5>Appointment Information</h5>
+                                        <p><strong>Service:</strong> <t t-esc="appointment.service_id.name"/></p>
+                                        <p><strong>Date &amp; Time:</strong> <t t-esc="appointment.start_datetime" t-options="{'widget': 'datetime'}"/></p>
+                                        <p><strong>Duration:</strong> <t t-esc="appointment.duration_minutes"/> minutes</p>
+                                        <p t-if="appointment.notes"><strong>Notes:</strong> <t t-esc="appointment.notes"/></p>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <h5>Contact Information</h5>
+                                        <p><strong>Name:</strong> <t t-esc="appointment.partner_id.name"/></p>
+                                        <p t-if="appointment.customer_email"><strong>Email:</strong> <t t-esc="appointment.customer_email"/></p>
+                                        <p t-if="appointment.customer_phone"><strong>Phone:</strong> <t t-esc="appointment.customer_phone"/></p>
+                                    </div>
+                                </div>
+                                
+                                <div class="row mt-3" t-if="appointment.can_cancel or appointment.can_reschedule">
+                                    <div class="col-12">
+                                        <form t-if="appointment.can_cancel" method="post" t-attf-action="/my/appointments/#{appointment.id}/cancel" class="d-inline">
+                                            <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+                                            <button type="submit" class="btn btn-danger" onclick="return confirm('Are you sure you want to cancel this appointment?');">
+                                                <i class="fa fa-times"/> Cancel Appointment
+                                            </button>
+                                        </form>
+                                        <a t-if="appointment.can_reschedule" href="#" class="btn btn-warning ml-2">
+                                            <i class="fa fa-calendar"/> Reschedule
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </t>
+    </template>
+
+    <!-- Portal Book Appointment Page -->
+    <template id="portal_book_appointment" name="Book Appointment">
+        <t t-call="portal.portal_layout">
+            <div class="container mt-3">
+                <h1 class="mb-4">Book an Appointment</h1>
+                
+                <t t-if="not service">
+                    <div class="row">
+                        <t t-foreach="services" t-as="srv">
+                            <div class="col-md-4 mb-3">
+                                <div class="card h-100">
+                                    <div class="card-body">
+                                        <h5 class="card-title"><t t-esc="srv.name"/></h5>
+                                        <p class="card-text"><t t-raw="srv.description or 'No description'"/></p>
+                                        <p><strong>Duration:</strong> <t t-esc="srv.duration_minutes"/> min</p>
+                                        <p t-if="srv.price &gt; 0"><strong>Price:</strong> <t t-esc="srv.price"/> <t t-esc="srv.currency_id.symbol"/></p>
+                                        <a t-attf-href="/book/#{srv.id}" class="btn btn-primary">Book Now</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </t>
+                    </div>
+                </t>
+                
+                <t t-if="service">
+                    <div class="row">
+                        <div class="col-lg-8">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h3><t t-esc="service.name"/></h3>
+                                </div>
+                                <div class="card-body">
+                                    <div id="appointment-booking-widget" t-att-data-service-id="service.id">
+                                        <!-- OWL Component will be mounted here -->
+                                        <p>Loading availability...</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-4">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5>Service Details</h5>
+                                </div>
+                                <div class="card-body">
+                                    <p><strong>Duration:</strong> <t t-esc="service.duration_minutes"/> minutes</p>
+                                    <p t-if="service.price &gt; 0"><strong>Price:</strong> <t t-esc="service.price"/> <t t-esc="service.currency_id.symbol"/></p>
+                                    <div t-if="service.description">
+                                        <h6>Description:</h6>
+                                        <t t-raw="service.description"/>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </t>
+            </div>
+        </t>
+    </template>
+
+    <!-- OAuth Success Template -->
+    <template id="oauth_success" name="OAuth Connection Successful">
+        <t t-call="portal.portal_layout">
+            <div class="container mt-5">
+                <div class="alert alert-success" role="alert">
+                    <h4 class="alert-heading">Successfully Connected!</h4>
+                    <p>Your calendar provider has been connected successfully.</p>
+                    <hr/>
+                    <p class="mb-0">You can now close this window and return to the configuration page.</p>
+                </div>
+            </div>
+        </t>
+    </template>
+
+    <!-- OAuth Error Template -->
+    <template id="oauth_error" name="OAuth Connection Error">
+        <t t-call="portal.portal_layout">
+            <div class="container mt-5">
+                <div class="alert alert-danger" role="alert">
+                    <h4 class="alert-heading">Connection Failed</h4>
+                    <p><strong>Error:</strong> <t t-esc="error"/></p>
+                    <p t-if="error_description"><t t-esc="error_description"/></p>
+                    <hr/>
+                    <p class="mb-0">Please try again or contact support if the problem persists.</p>
+                </div>
+            </div>
+        </t>
+    </template>
+
+</odoo>

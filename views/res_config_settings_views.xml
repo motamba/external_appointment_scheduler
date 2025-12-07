@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    
+    <!-- Add Appointments settings to General Settings -->
+    <record id="res_config_settings_view_form" model="ir.ui.view">
+        <field name="name">res.config.settings.view.form.inherit.appointment</field>
+        <field name="model">res.config.settings</field>
+        <field name="inherit_id" ref="base.res_config_settings_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//form" position="inside">
+                <div class="app_settings_block" data-string="Appointments" string="Appointments" data-key="external_appointment_scheduler">
+                    <h2>External Appointment Scheduler</h2>
+                    
+                    <div class="row mt16 o_settings_container">
+                        <div class="col-12 col-lg-6 o_setting_box">
+                            <div class="o_setting_left_pane">
+                                <field name="appointment_send_confirmation"/>
+                            </div>
+                            <div class="o_setting_right_pane">
+                                <label for="appointment_send_confirmation"/>
+                                <div class="text-muted">
+                                    Automatically send confirmation emails when appointments are booked
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-12 col-lg-6 o_setting_box">
+                            <div class="o_setting_left_pane">
+                                <field name="appointment_send_reminders"/>
+                            </div>
+                            <div class="o_setting_right_pane">
+                                <label for="appointment_send_reminders"/>
+                                <div class="text-muted">
+                                    Send reminder emails before appointments
+                                </div>
+                                <div class="content-group" invisible="not appointment_send_reminders">
+                                    <div class="row mt16">
+                                        <label for="appointment_reminder_hours" class="col-3 col-lg-3 o_light_label"/>
+                                        <field name="appointment_reminder_hours"/> hours before
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <h3 class="mt32">Booking Rules</h3>
+                    <div class="row mt16 o_settings_container">
+                        <div class="col-12 col-lg-6 o_setting_box">
+                            <div class="o_setting_right_pane">
+                                <span class="o_form_label">Default Lead Time</span>
+                                <div class="text-muted">
+                                    Minimum hours before appointment can be booked
+                                </div>
+                                <div class="content-group">
+                                    <div class="row">
+                                        <label for="appointment_default_lead_hours" class="col-3 col-lg-3 o_light_label"/>
+                                        <field name="appointment_default_lead_hours"/> hours
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-12 col-lg-6 o_setting_box">
+                            <div class="o_setting_right_pane">
+                                <span class="o_form_label">Maximum Advance Booking</span>
+                                <div class="text-muted">
+                                    Maximum days in advance for bookings
+                                </div>
+                                <div class="content-group">
+                                    <div class="row">
+                                        <label for="appointment_default_max_days" class="col-3 col-lg-3 o_light_label"/>
+                                        <field name="appointment_default_max_days"/> days
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <h3 class="mt32">Cancellation Policy</h3>
+                    <div class="row mt16 o_settings_container">
+                        <div class="col-12 col-lg-6 o_setting_box">
+                            <div class="o_setting_left_pane">
+                                <field name="appointment_allow_cancellation"/>
+                            </div>
+                            <div class="o_setting_right_pane">
+                                <label for="appointment_allow_cancellation"/>
+                                <div class="text-muted">
+                                    Allow customers to cancel appointments via portal
+                                </div>
+                                <div class="content-group" invisible="not appointment_allow_cancellation">
+                                    <div class="row mt16">
+                                        <label for="appointment_cancellation_hours" class="col-3 col-lg-3 o_light_label"/>
+                                        <field name="appointment_cancellation_hours"/> hours notice required
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-12 col-lg-6 o_setting_box">
+                            <div class="o_setting_left_pane">
+                                <field name="appointment_allow_reschedule"/>
+                            </div>
+                            <div class="o_setting_right_pane">
+                                <label for="appointment_allow_reschedule"/>
+                                <div class="text-muted">
+                                    Allow customers to reschedule appointments
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <h3 class="mt32">Calendar Provider</h3>
+                    <div class="row mt16 o_settings_container">
+                        <div class="col-12 col-lg-6 o_setting_box">
+                            <div class="o_setting_right_pane">
+                                <span class="o_form_label">Default Provider</span>
+                                <div class="text-muted">
+                                    Default calendar provider for new services
+                                </div>
+                                <div class="content-group">
+                                    <div class="row">
+                                        <label for="appointment_default_provider_id" class="col-3 col-lg-3 o_light_label"/>
+                                        <field name="appointment_default_provider_id" class="oe_inline"/>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <h3 class="mt32">Portal Settings</h3>
+                    <div class="row mt16 o_settings_container">
+                        <div class="col-12 col-lg-6 o_setting_box">
+                            <div class="o_setting_left_pane">
+                                <field name="appointment_portal_show_past"/>
+                            </div>
+                            <div class="o_setting_right_pane">
+                                <label for="appointment_portal_show_past"/>
+                                <div class="text-muted">
+                                    Display past appointments in portal
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-12 col-lg-6 o_setting_box">
+                            <div class="o_setting_right_pane">
+                                <span class="o_form_label">Calendar View Range</span>
+                                <div class="text-muted">
+                                    Days ahead to show in portal calendar
+                                </div>
+                                <div class="content-group">
+                                    <div class="row">
+                                        <label for="appointment_portal_max_future_days" class="col-3 col-lg-3 o_light_label"/>
+                                        <field name="appointment_portal_max_future_days"/> days
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>

@@ -1,0 +1,113 @@
+/* Appointment Booking Widget Styles */
+
+.ea-calendar-widget {
+  display: flex;
+  gap: 1.5rem;
+  padding: 1rem;
+  
+  @media (max-width: 768px) {
+    flex-direction: column;
+  }
+}
+
+.ea-slot-picker {
+  flex: 1 1 40%;
+  
+  .ea-slots-list {
+    max-height: 500px;
+    overflow-y: auto;
+    padding-right: 0.5rem;
+    
+    &::-webkit-scrollbar {
+      width: 8px;
+    }
+    
+    &::-webkit-scrollbar-track {
+      background: #f1f1f1;
+      border-radius: 4px;
+    }
+    
+    &::-webkit-scrollbar-thumb {
+      background: #888;
+      border-radius: 4px;
+      
+      &:hover {
+        background: #555;
+      }
+    }
+  }
+  
+  .ea-slot-item {
+    text-align: left;
+    transition: all 0.2s ease;
+    
+    &:hover {
+      transform: translateX(4px);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+    
+    i.fa {
+      color: #007bff;
+    }
+  }
+}
+
+.ea-booking-form {
+  flex: 1 1 60%;
+  
+  .card-header {
+    border-radius: 0.25rem 0.25rem 0 0;
+  }
+  
+  label.required::after {
+    content: " *";
+    color: #dc3545;
+  }
+  
+  .form-control:focus {
+    border-color: #007bff;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+  }
+}
+
+/* Portal-specific styles */
+#appointment-booking-widget {
+  min-height: 400px;
+  
+  .ea-calendar-widget {
+    background: #fff;
+    border-radius: 0.5rem;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  }
+}
+
+/* Loading state */
+.ea-calendar-widget .fa-spinner {
+  color: #007bff;
+}
+
+/* Success state */
+.ea-calendar-widget .alert-success {
+  h4 {
+    color: #155724;
+    margin-bottom: 1rem;
+  }
+}
+
+/* Backend list view customizations */
+.o_list_view {
+  .ea-status-badge {
+    display: inline-block;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.25rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    
+    &.draft { background-color: #6c757d; color: #fff; }
+    &.confirmed { background-color: #28a745; color: #fff; }
+    &.completed { background-color: #007bff; color: #fff; }
+    &.cancelled { background-color: #dc3545; color: #fff; }
+    &.no_show { background-color: #ffc107; color: #000; }
+  }
+}
+

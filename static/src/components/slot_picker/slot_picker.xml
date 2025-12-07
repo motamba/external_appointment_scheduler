@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+    <t t-name="external_appointment_scheduler.SlotPicker">
+        <div class="ea-slot-picker">
+            <h5 class="mb-3">Select a Time Slot</h5>
+            
+            <t t-if="props.slots.length === 0">
+                <div class="alert alert-info">
+                    <i class="fa fa-info-circle"/> No available time slots at the moment.
+                </div>
+            </t>
+            
+            <t t-else="">
+                <div class="ea-slots-list">
+                    <t t-foreach="props.slots" t-as="slot" t-key="slot.id || slot.start">
+                        <button 
+                            class="btn btn-outline-primary btn-block ea-slot-item mb-2 text-left"
+                            t-on-click="() => this.selectSlot(slot)"
+                        >
+                            <i class="fa fa-calendar-o mr-2"/>
+                            <span t-esc="slot.start_display || formatDate(slot.start)"/>
+                            —
+                            <span t-esc="slot.end_display || formatDate(slot.end)"/>
+                            <t t-if="slot.capacity">
+                                <span class="badge badge-info ml-2">
+                                    <t t-esc="slot.capacity"/> spots
+                                </span>
+                            </t>
+                        </button>
+                    </t>
+                </div>
+            </t>
+        </div>
+    </t>
+
+</templates>

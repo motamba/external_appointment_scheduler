@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    
+    <!-- Calendar Config Tree View -->
+    <record id="view_external_calendar_config_tree" model="ir.ui.view">
+        <field name="name">external.calendar.config.tree</field>
+        <field name="model">external.calendar.config</field>
+        <field name="arch" type="xml">
+            <list string="Calendar Configurations">
+                <field name="name"/>
+                <field name="provider"/>
+                <field name="is_connected" widget="boolean"/>
+                <field name="last_sync_date"/>
+                <field name="sync_status" widget="badge" decoration-success="sync_status=='success'" decoration-danger="sync_status=='error'"/>
+                <field name="active" widget="boolean_toggle"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Calendar Config Form View -->
+    <record id="view_external_calendar_config_form" model="ir.ui.view">
+        <field name="name">external.calendar.config.form</field>
+        <field name="model">external.calendar.config</field>
+        <field name="arch" type="xml">
+            <form string="Calendar Configuration">
+                <header>
+                    <button name="action_connect_oauth" string="Connect with Google" type="object" class="oe_highlight" invisible="provider != 'google' or is_connected"/>
+                    <button name="action_disconnect" string="Disconnect" type="object" confirm="Are you sure you want to disconnect?" invisible="not is_connected"/>
+                    <button name="action_test_connection" string="Test Connection" type="object" invisible="not is_connected"/>
+                    <button name="action_setup_webhook" string="Setup Webhook" type="object" invisible="not is_connected or webhook_channel_id"/>
+                    <button name="action_refresh_webhook" string="Refresh Webhook" type="object" invisible="not webhook_channel_id"/>
+                    <field name="sync_status" widget="statusbar" statusbar_visible="pending,success"/>
+                </header>
+                <sheet>
+                    <widget name="web_ribbon" title="Archived" bg_color="bg-danger" invisible="active"/>
+                    <widget name="web_ribbon" title="Connected" bg_color="bg-success" invisible="not is_connected"/>
+                    
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" placeholder="Configuration Name"/>
+                        </h1>
+                    </div>
+                    
+                    <group>
+                        <group name="provider_info">
+                            <field name="active" invisible="1"/>
+                            <field name="provider"/>
+                            <field name="is_connected" readonly="1"/>
+                            <field name="has_valid_token" readonly="1" invisible="1"/>
+                        </group>
+                        <group name="sync_info">
+                            <field name="last_sync_date" readonly="1"/>
+                            <field name="sync_message" readonly="1" invisible="not sync_message"/>
+                        </group>
+                    </group>
+                    
+                    <notebook>
+                        <page string="OAuth Credentials" name="credentials">
+                            <group>
+                                <group>
+                                    <field name="client_id" password="True"/>
+                                    <field name="client_secret" password="True"/>
+                                    <field name="api_key" password="True" invisible="provider != 'calendly'"/>
+                                </group>
+                                <group>
+                                    <field name="default_calendar_id"/>
+                                </group>
+                            </group>
+                            <div class="alert alert-info" role="alert">
+                                <h4>Setup Instructions:</h4>
+                                <ul>
+                                    <li>Go to Google Cloud Console and create a project</li>
+                                    <li>Enable Google Calendar API</li>
+                                    <li>Create OAuth 2.0 credentials (Web application)</li>
+                                    <li>Add authorized redirect URI: <code>https://your-domain/calendar/oauth/callback</code></li>
+                                    <li>Copy Client ID and Client Secret here</li>
+                                    <li>Click "Connect with Google" button above</li>
+                                </ul>
+                            </div>
+                        </page>
+                        <page string="Webhook" name="webhook">
+                            <group>
+                                <group>
+                                    <field name="webhook_url" readonly="1" widget="url"/>
+                                    <field name="webhook_secret" password="True" readonly="1"/>
+                                </group>
+                                <group>
+                                    <field name="webhook_channel_id" readonly="1"/>
+                                    <field name="webhook_resource_id" readonly="1"/>
+                                    <field name="webhook_expiration" readonly="1"/>
+                                </group>
+                            </group>
+                            <div class="alert alert-warning" role="alert" invisible="webhook_channel_id">
+                                <p>Webhook not configured. Click "Setup Webhook" button above to enable real-time sync.</p>
+                            </div>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Calendar Config Action -->
+    <record id="action_external_calendar_config" model="ir.actions.act_window">
+        <field name="name">Calendar Providers</field>
+        <field name="res_model">external.calendar.config</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Configure your calendar provider
+            </p>
+            <p>
+                Connect to Google Calendar or Calendly to sync appointments.
+            </p>
+        </field>
+    </record>
+
+</odoo>
