@@ -10,10 +10,27 @@
         var slotPickerEl = container.querySelector('.ea-slot-picker');
         var bookingFormEl = container.querySelector('.ea-booking-form');
 
+        // Check if API is available
+        if (typeof window.AppointmentAPI === 'undefined') {
+            slotPickerEl.innerHTML = '<div class="alert alert-danger">Appointment API not loaded. Please refresh the page.</div>';
+            console.error('AppointmentAPI is not defined');
+            return;
+        }
+
         // Load availability
+        console.log('Loading availability for service:', serviceId);
         AppointmentAPI.getAvailability(serviceId).then(function (data) {
-            if (!data || !data.slots || data.slots.length === 0) {
-                slotPickerEl.innerHTML = '<div class="alert alert-info">No available slots found.</div>';
+            console.log('Availability data:', data);
+            if (!data) {
+                slotPickerEl.innerHTML = '<div class="alert alert-danger">Failed to load availability. Please contact support.</div>';
+                return;
+            }
+            if (data.error) {
+                slotPickerEl.innerHTML = '<div class="alert alert-danger">Error: ' + data.error + '</div>';
+                return;
+            }
+            if (!data.success || !data.slots || data.slots.length === 0) {
+                slotPickerEl.innerHTML = '<div class="alert alert-info">No available slots found for the next 7 days. Please check back later or contact us.</div>';
                 return;
             }
             // Render slots

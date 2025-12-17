@@ -4,8 +4,8 @@
     <!-- Main Menu -->
     <menuitem id="menu_appointment_root"
         name="Appointments"
-        sequence="100"
-        web_icon="external_appointment_scheduler,static/description/icon.png"/>
+        parent="calendar.mail_menu_calendar"
+        sequence="20"/>
     
     <!-- Appointments submenu -->
     <menuitem id="menu_appointment_appointments"

@@ -2,6 +2,10 @@
 
 from odoo import models, fields, api, _
 from odoo.exceptions import ValidationError
+from datetime import datetime, timedelta
+import logging
+
+_logger = logging.getLogger(__name__)
 
 
 class ExternalAppointmentService(models.Model):
@@ -228,13 +232,13 @@ class ExternalAppointmentService(models.Model):
         """
         self.ensure_one()
         
-        # Get provider adapter
+        # If no provider configured, generate simple default slots
         if not self.provider_id:
-            return []
+            return self._generate_default_slots(date_from, date_to)
         
         adapter = self.provider_id._get_adapter()
         if not adapter:
-            return []
+            return self._generate_default_slots(date_from, date_to)
         
         # Get available slots from provider
         try:
@@ -250,10 +254,46 @@ class ExternalAppointmentService(models.Model):
             )
             return slots
         except Exception as e:
-            import logging
-            _logger = logging.getLogger(__name__)
             _logger.error(f"Failed to get available slots for service {self.id}: {e}")
-            return []
+            return self._generate_default_slots(date_from, date_to)
+    
+    def _generate_default_slots(self, date_from, date_to):
+        """Generate simple default time slots when no provider is configured.
+        
+        Returns slots from 9 AM to 5 PM on weekdays.
+        """
+        slots = []
+        current_date = date_from.date()
+        end_date = date_to.date()
+        
+        # Business hours: 9 AM to 5 PM
+        start_hour = 9
+        end_hour = 17
+        
+        while current_date <= end_date:
+            # Skip weekends
+            if current_date.weekday() < 5:  # Monday=0, Friday=4
+                current_time = datetime.combine(current_date, datetime.min.time()).replace(hour=start_hour)
+                day_end = datetime.combine(current_date, datetime.min.time()).replace(hour=end_hour)
+                
+                while current_time + timedelta(minutes=self.duration_minutes) <= day_end:
+                    slot_end = current_time + timedelta(minutes=self.duration_minutes)
+                    
+                    # Check if slot is in the future
+                    if current_time > datetime.now():
+                        slots.append({
+                            'id': None,
+                            'start': current_time,
+                            'end': slot_end,
+                            'capacity': self.capacity or 1,
+                        })
+                    
+                    # Move to next slot (including buffer time)
+                    current_time = slot_end + timedelta(minutes=self.buffer_minutes or 0)
+            
+            current_date += timedelta(days=1)
+        
+        return slots
     
     def copy(self, default=None):
         """Override copy to add (copy) to name."""

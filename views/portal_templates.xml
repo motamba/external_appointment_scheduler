@@ -1,6 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
     
+    <!-- Add Appointments menu item to Portal Homepage -->
+    <template id="portal_my_home_appointments" name="Appointments" inherit_id="portal.portal_my_home" customize_show="True" priority="40">
+        <xpath expr="//div[hasclass('o_portal_docs')]" position="before">
+            <t t-set="portal_client_category_enable" t-value="True"/>
+            <t t-set="portal_vendor_category_enable" t-value="True"/>
+        </xpath>
+        <xpath expr="//div[@id='portal_client_category']" position="inside">
+            <t t-call="portal.portal_docs_entry">
+                <t t-set="icon" t-value="'/external_appointment_scheduler/static/src/img/appointments.svg'"/>
+                <t t-set="title">Appointments</t>
+                <t t-set="url" t-value="'/my/appointments'"/>
+                <t t-set="text">View and manage your appointments</t>
+                <t t-set="placeholder_count" t-value="'appointment_count'"/>
+                <t t-set="config_card" t-value="True"/>
+            </t>
+        </xpath>
+    </template>
+    
     <!-- Portal My Appointments List -->
     <template id="portal_my_appointments" name="My Appointments">
         <t t-call="portal.portal_layout">
@@ -57,6 +75,14 @@
             <t t-set="o" t-value="appointment"/>
             
             <div class="container mt-3">
+                <!-- Success message after booking -->
+                <div t-if="request.params.get('booking_success')" class="alert alert-success alert-dismissible fade show" role="alert">
+                    <strong><i class="fa fa-check-circle"/> Success!</strong> Your appointment has been booked successfully! A confirmation email has been sent to you.
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                        <span aria-hidden="true">×</span>
+                    </button>
+                </div>
+                
                 <div class="row">
                     <div class="col-lg-12">
                         <div class="card">
@@ -138,10 +164,46 @@
                                     <h3><t t-esc="service.name"/></h3>
                                 </div>
                                 <div class="card-body">
-                                    <div id="appointment-booking-widget" t-att-data-service-id="service.id">
-                                        <!-- OWL Component will be mounted here -->
-                                        <p>Loading availability...</p>
-                                    </div>
+                                    <!-- Simple booking form without JS dependencies -->
+                                    <form method="POST" t-attf-action="/api/appointments/book" class="ea-booking-form">
+                                        <input type="hidden" name="service_id" t-att-value="service.id"/>
+
+                                        <!-- If user is logged in, send partner_id and prefill contact fields -->
+                                        <t t-if="request.env.user and request.env.user.id != request.env.ref('base.public_user').id">
+                                            <input type="hidden" name="partner_id" t-att-value="request.env.user.partner_id.id"/>
+                                            <input type="hidden" name="customer_email" t-att-value="request.env.user.email"/>
+                                            <input type="hidden" name="customer_name" t-att-value="request.env.user.name"/>
+                                        </t>
+
+                                        <div class="mb-3">
+                                            <label class="form-label" for="appointment_date">Preferred Date &amp; Time</label>
+                                            <input type="datetime-local" class="form-control" id="appointment_date" name="start_datetime" required="required"/>
+                                        </div>
+
+                                        <div class="mb-3">
+                                            <label class="form-label" for="customer_name">Name</label>
+                                            <input type="text" class="form-control" id="customer_name" name="customer_name" required="required" t-att-value="request.env.user.name if request.env.user and request.env.user.id != request.env.ref('base.public_user').id else ''"/>
+                                        </div>
+
+                                        <div class="mb-3">
+                                            <label class="form-label" for="customer_email">Email</label>
+                                            <input type="email" class="form-control" id="customer_email" name="customer_email" required="required" t-att-value="request.env.user.email if request.env.user and request.env.user.id != request.env.ref('base.public_user').id else ''"/>
+                                        </div>
+
+                                        <div class="mb-3">
+                                            <label class="form-label" for="customer_phone">Phone</label>
+                                            <input type="tel" class="form-control" id="customer_phone" name="customer_phone"/>
+                                        </div>
+                                        
+                                        <div class="mb-3">
+                                            <label class="form-label" for="notes">Notes (Optional)</label>
+                                            <textarea class="form-control" id="notes" name="notes" rows="3"></textarea>
+                                        </div>
+                                        
+                                        <div class="text-end">
+                                            <button type="submit" class="btn btn-primary btn-lg">Book Appointment</button>
+                                        </div>
+                                    </form>
                                 </div>
                             </div>
                         </div>

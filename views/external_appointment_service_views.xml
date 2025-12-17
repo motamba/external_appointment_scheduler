@@ -90,34 +90,35 @@
         <field name="name">external.appointment.service.kanban</field>
         <field name="model">external.appointment.service</field>
         <field name="arch" type="xml">
-            <kanban string="Services">
+            <kanban>
                 <field name="id"/>
                 <field name="name"/>
                 <field name="duration_minutes"/>
                 <field name="price"/>
                 <field name="appointment_count"/>
                 <field name="color"/>
+                <field name="image_128"/>
                 <templates>
-                    <t t-name="kanban-box">
-                        <div t-attf-class="oe_kanban_card oe_kanban_global_click" t-attf-style="border-left: 4px solid #{kanban_color(record.color.raw_value)};">
-                            <div class="o_kanban_image">
-                                <img t-att-src="kanban_image('external.appointment.service', 'image_128', record.id.raw_value)" alt="Service"/>
+                    <t t-name="card" class="flex-row">
+                        <aside>
+                            <field name="image_128" widget="image" class="o_kanban_image" alt="Service"/>
+                        </aside>
+                        <main class="ms-3">
+                            <strong class="o_kanban_record_title d-block"><field name="name"/></strong>
+                            <div>
+                                <i class="fa fa-clock-o me-1" title="Duration"/>
+                                <field name="duration_minutes"/> min
                             </div>
-                            <div class="oe_kanban_details">
-                                <strong class="o_kanban_record_title"><field name="name"/></strong>
-                                <div>
-                                    <i class="fa fa-clock-o" title="Duration"></i> <field name="duration_minutes"/> min
-                                </div>
-                                <div>
-                                    <i class="fa fa-money" title="Price"></i> <field name="price"/> <field name="currency_id"/>
-                                </div>
-                                <div class="o_kanban_record_bottom">
-                                    <button name="action_view_appointments" type="object" class="btn btn-sm btn-link">
-                                        <field name="appointment_count"/> Appointments
-                                    </button>
-                                </div>
+                            <div>
+                                <i class="fa fa-money me-1" title="Price"/>
+                                <field name="price"/> <field name="currency_id"/>
                             </div>
-                        </div>
+                            <div class="mt-2">
+                                <button name="action_view_appointments" type="object" class="btn btn-sm btn-link p-0">
+                                    <field name="appointment_count"/> Appointments
+                                </button>
+                            </div>
+                        </main>
                     </t>
                 </templates>
             </kanban>

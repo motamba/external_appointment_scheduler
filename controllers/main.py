@@ -66,10 +66,16 @@ class AppointmentAPIController(http.Controller):
             # Format slots for response
             formatted_slots = []
             for slot in slots:
+                start_dt = slot['start']
+                end_dt = slot['end']
                 formatted_slots.append({
-                    'start': slot['start'].isoformat(),
-                    'end': slot['end'].isoformat(),
+                    'id': slot.get('id'),
+                    'start': start_dt.isoformat(),
+                    'end': end_dt.isoformat(),
+                    'start_display': start_dt.strftime('%B %d, %Y at %I:%M %p'),
+                    'end_display': end_dt.strftime('%I:%M %p'),
                     'available': True,
+                    'capacity': slot.get('capacity'),
                 })
             
             result = {
@@ -123,6 +129,19 @@ class AppointmentAPIController(http.Controller):
             partner_phone = payload.get('customer_phone') or payload.get('partner_phone') or kw.get('partner_phone') or kw.get('phone')
             notes = payload.get('notes') or kw.get('notes')
 
+            # Debug logging: record what was received to help diagnose missing partner fields
+            try:
+                received_body = request.httprequest.get_data().decode('utf-8') if request.httprequest.get_data() else ''
+            except Exception:
+                received_body = '<unreadable>'
+            _logger.info(
+                'Booking request received: headers=%s, form_keys=%s, payload_keys=%s, body=%s',
+                dict(request.httprequest.headers),
+                list(kw.keys()),
+                list(payload.keys()),
+                (received_body[:200] + '...') if len(received_body) > 200 else received_body,
+            )
+
             if not service_id or not start_datetime:
                 err = {'error': 'Missing required parameters: service_id and start_datetime'}
                 return request.make_response(json.dumps(err), headers=[('Content-Type', 'application/json')])
@@ -153,7 +172,15 @@ class AppointmentAPIController(http.Controller):
                         'phone': partner_phone,
                     })
             else:
-                err = {'error': 'Partner information required'}
+                # Provide more context in the error to aid debugging (safe: only keys, not full values)
+                err = {
+                    'error': 'Partner information required',
+                    'received': {
+                        'form_keys': list(kw.keys()),
+                        'json_keys': list(payload.keys()),
+                    }
+                }
+                _logger.warning('Partner info missing for booking: %s', err['received'])
                 return request.make_response(json.dumps(err), headers=[('Content-Type', 'application/json')])
             
             # Create appointment
@@ -182,20 +209,26 @@ class AppointmentAPIController(http.Controller):
             # Confirm appointment
             appointment.action_confirm()
 
-            # Provide backward-compatible response keys expected by tests
-            response = {
-                'success': True,
-                'appointment_id': appointment.id,
-                'appointment_ref': appointment.name,
-                'status': appointment.status,
-                'provider_event_id': appointment.provider_event_id,
-                'message': _('Appointment booked successfully! Confirmation email sent.'),
-                # Aliases used by tests
-                'id': appointment.id,
-                'reference': appointment.name,
-            }
-
-            return request.make_response(json.dumps(response), headers=[('Content-Type', 'application/json')])
+            # Check if this is a form submission (form POST) vs API call (JSON)
+            content_type = request.httprequest.headers.get('Content-Type', '')
+            is_api_call = content_type.startswith('application/json')
+            
+            if is_api_call:
+                # API call - return JSON response
+                response = {
+                    'success': True,
+                    'appointment_id': appointment.id,
+                    'appointment_ref': appointment.name,
+                    'status': appointment.status,
+                    'provider_event_id': appointment.provider_event_id,
+                    'message': _('Appointment booked successfully! Confirmation email sent.'),
+                    'id': appointment.id,
+                    'reference': appointment.name,
+                }
+                return request.make_response(json.dumps(response), headers=[('Content-Type', 'application/json')])
+            else:
+                # Form submission - redirect to appointment detail page
+                return request.redirect('/my/appointments/%s?booking_success=1' % appointment.id)
 
         except Exception as e:
             _logger.error(f"Error booking appointment: {e}")
