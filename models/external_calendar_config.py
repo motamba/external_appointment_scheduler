@@ -157,11 +157,19 @@ class ExternalCalendarConfig(models.Model):
         default=lambda self: self.env.company
     )
     
-    # Constraints
-    _sql_constraints = [
-        ('name_unique', 'unique(name, company_id)', 
-         'Configuration name must be unique per company!'),
-    ]
+    @api.constrains('name', 'company_id')
+    def _check_unique_name_per_company(self):
+        """Ensure configuration name is unique per company."""
+        for rec in self:
+            if not rec.name:
+                continue
+            domain = [
+                ('id', '!=', rec.id),
+                ('name', '=', rec.name),
+                ('company_id', '=', rec.company_id.id),
+            ]
+            if self.search(domain, limit=1):
+                raise ValidationError(_('Configuration name must be unique per company!'))
     
     @api.depends('token_ids', 'token_ids.is_expired')
     def _compute_is_connected(self):

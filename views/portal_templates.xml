@@ -8,7 +8,7 @@
         </xpath>
         <xpath expr="//div[@id='portal_client_category']" position="inside">
             <t t-call="portal.portal_docs_entry">
-                <t t-set="icon" t-value="'/external_appointment_scheduler/static/src/img/appointments.svg'"/>
+                <t t-set="icon" t-value="'/external_appointment_scheduler/static/src/img/calendar.svg'"/>
                 <t t-set="title">Appointments</t>
                 <t t-set="url" t-value="'/my/appointments'"/>
                 <t t-set="text">View and manage your appointments</t>
@@ -22,6 +22,18 @@
     <template id="portal_my_appointments" name="My Appointments">
         <t t-call="portal.portal_layout">
             <t t-set="breadcrumbs_searchbar" t-value="True"/>
+            
+            <style>
+                .btn-primary, .btn-secondary {
+                    background-color: #38a3a5 !important;
+                    border-color: #38a3a5 !important;
+                    color: #ffffff !important;
+                }
+                .btn-primary:hover, .btn-secondary:hover {
+                    background-color: #2d8284 !important;
+                    border-color: #2d8284 !important;
+                }
+            </style>
             
             <t t-call="portal.portal_searchbar">
                 <t t-set="title">Appointments</t>
@@ -47,7 +59,7 @@
                         <th>Service</th>
                         <th>Date &amp; Time</th>
                         <th>Status</th>
-                        <th></th>
+                        <th>Action</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -57,11 +69,12 @@
                             <td><t t-esc="appointment.service_id.name"/></td>
                             <td><t t-esc="appointment.start_datetime" t-options="{'widget': 'datetime'}"/></td>
                             <td>
-                                <span t-if="appointment.status == 'draft'" class="badge badge-secondary">Draft</span>
-                                <span t-if="appointment.status == 'confirmed'" class="badge badge-success">Confirmed</span>
-                                <span t-if="appointment.status == 'completed'" class="badge badge-primary">Completed</span>
-                                <span t-if="appointment.status == 'cancelled'" class="badge badge-danger">Cancelled</span>
-                                <span t-if="appointment.status == 'no_show'" class="badge badge-warning">No Show</span>
+                                <span t-if="appointment.status == 'draft'" class="badge bg-secondary text-white">Draft</span>
+                                <span t-if="appointment.status == 'confirmed'" class="badge bg-success text-white">Confirmed</span>
+                                <span t-if="appointment.status == 'checked_in'" class="badge bg-info text-white">Checked In</span>
+                                <span t-if="appointment.status == 'completed'" class="badge bg-primary text-white">Completed</span>
+                                <span t-if="appointment.status == 'cancelled'" class="badge bg-danger text-white">Cancelled</span>
+                                <span t-if="appointment.status == 'no_show'" class="badge bg-warning text-dark">No Show</span>
                             </td>
                             <td class="text-right">
                                 <a t-att-href="'/my/appointments/' + str(appointment.id)" class="btn btn-sm btn-secondary">
@@ -80,13 +93,37 @@
         <t t-call="portal.portal_layout">
             <t t-set="o" t-value="appointment"/>
             
+            <style>
+                .btn-primary, .btn-secondary {
+                    background-color: #38a3a5 !important;
+                    border-color: #38a3a5 !important;
+                    color: #ffffff !important;
+                }
+                .btn-primary:hover, .btn-secondary:hover {
+                    background-color: #2d8284 !important;
+                    border-color: #2d8284 !important;
+                }
+            </style>
+            
             <div class="container mt-3">
+                <!-- Back button (hidden after booking) -->
+                <div class="mb-3" t-if="not request.params.get('booking_success')">
+                    <a href="/my/appointments" class="btn btn-secondary">
+                        <i class="fa fa-arrow-left"/> Back to Appointments
+                    </a>
+                </div>
+                
                 <!-- Success message after booking -->
                 <div t-if="request.params.get('booking_success')" class="alert alert-success alert-dismissible fade show" role="alert">
                     <strong><i class="fa fa-check-circle"/> Success!</strong> Your appointment has been booked successfully! A confirmation email has been sent to you.
                     <button type="button" class="close" data-dismiss="alert" aria-label="Close">
                         <span aria-hidden="true">×</span>
                     </button>
+                    <div class="mt-2">
+                        <a href="/my/appointments" class="btn btn-primary">
+                            <i class="fa fa-list"/> View All Appointments
+                        </a>
+                    </div>
                 </div>
                 
                 <div class="row">
@@ -95,9 +132,12 @@
                             <div class="card-header">
                                 <h3>
                                     <t t-esc="appointment.name"/>
-                                    <span t-if="appointment.status == 'confirmed'" class="badge badge-success float-right">Confirmed</span>
-                                    <span t-if="appointment.status == 'cancelled'" class="badge badge-danger float-right">Cancelled</span>
-                                    <span t-if="appointment.status == 'completed'" class="badge badge-primary float-right">Completed</span>
+                                    <span t-if="appointment.status == 'draft'" class="badge bg-secondary text-white float-right">Draft</span>
+                                    <span t-if="appointment.status == 'confirmed'" class="badge bg-success text-white float-right">Confirmed</span>
+                                    <span t-if="appointment.status == 'checked_in'" class="badge bg-info text-white float-right">Checked In</span>
+                                    <span t-if="appointment.status == 'cancelled'" class="badge bg-danger text-white float-right">Cancelled</span>
+                                    <span t-if="appointment.status == 'completed'" class="badge bg-primary text-white float-right">Completed</span>
+                                    <span t-if="appointment.status == 'no_show'" class="badge bg-warning text-dark float-right">No Show</span>
                                 </h3>
                             </div>
                             <div class="card-body">
@@ -117,17 +157,36 @@
                                     </div>
                                 </div>
                                 
+                                <!-- Attachments Section -->
+                                <div class="row mt-3" t-if="appointment.attachment_ids">
+                                    <div class="col-12">
+                                        <h5>Attachments</h5>
+                                        <ul class="list-group">
+                                            <t t-foreach="appointment.attachment_ids" t-as="attachment">
+                                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                                    <span>
+                                                        <i class="fa fa-paperclip"/> <t t-esc="attachment.name"/>
+                                                    </span>
+                                                    <a t-attf-href="/web/content?model=ir.attachment&amp;id=#{attachment.id}&amp;field=datas&amp;download=true&amp;filename=#{attachment.name}&amp;access_token=#{attachment.generate_access_token()[0]}" class="btn btn-sm btn-primary">
+                                                        <i class="fa fa-download"/> Download
+                                                    </a>
+                                                </li>
+                                            </t>
+                                        </ul>
+                                    </div>
+                                </div>
+                                
                                 <div class="row mt-3" t-if="appointment.can_cancel or appointment.can_reschedule">
                                     <div class="col-12">
-                                        <form t-if="appointment.can_cancel" method="post" t-attf-action="/my/appointments/#{appointment.id}/cancel" class="d-inline">
+                                        <a t-if="appointment.can_reschedule" t-attf-href="/my/appointments/#{appointment.id}/reschedule" class="btn btn-warning">
+                                            <i class="fa fa-calendar"/> Reschedule
+                                        </a>
+                                        <form t-if="appointment.can_cancel" method="post" t-attf-action="/my/appointments/#{appointment.id}/cancel" class="d-inline ml-2">
                                             <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
                                             <button type="submit" class="btn btn-danger" onclick="return confirm('Are you sure you want to cancel this appointment?');">
                                                 <i class="fa fa-times"/> Cancel Appointment
                                             </button>
                                         </form>
-                                        <a t-if="appointment.can_reschedule" href="#" class="btn btn-warning ml-2">
-                                            <i class="fa fa-calendar"/> Reschedule
-                                        </a>
                                     </div>
                                 </div>
                             </div>
@@ -141,6 +200,18 @@
     <!-- Portal Book Appointment Page -->
     <template id="portal_book_appointment" name="Book Appointment">
         <t t-call="portal.portal_layout">
+            <style>
+                .btn-primary, .btn-secondary {
+                    background-color: #38a3a5 !important;
+                    border-color: #38a3a5 !important;
+                    color: #ffffff !important;
+                }
+                .btn-primary:hover, .btn-secondary:hover {
+                    background-color: #2d8284 !important;
+                    border-color: #2d8284 !important;
+                }
+            </style>
+            
             <div class="container mt-3">
                 <h3 class="mb-4">Book an Appointment</h3>
                 
@@ -171,7 +242,7 @@
                                 </div>
                                 <div class="card-body">
                                     <!-- Simple booking form without JS dependencies -->
-                                    <form method="POST" t-attf-action="/api/appointments/book" class="ea-booking-form">
+                                    <form method="POST" t-attf-action="/api/appointments/book" class="ea-booking-form" enctype="multipart/form-data">
                                         <input type="hidden" name="service_id" t-att-value="service.id"/>
 
                                         <!-- If user is logged in, send partner_id and prefill contact fields -->
@@ -204,6 +275,12 @@
                                         <div class="mb-3">
                                             <label class="form-label" for="notes">Notes (Optional)</label>
                                             <textarea class="form-control" id="notes" name="notes" rows="3"></textarea>
+                                        </div>
+                                        
+                                        <div class="mb-3">
+                                            <label class="form-label" for="attachments">Attachments (Optional)</label>
+                                            <input type="file" class="form-control" id="attachments" name="attachments" multiple="multiple" accept="image/*,.pdf,.doc,.docx,.txt"/>
+                                            <small class="form-text text-muted">You can upload multiple files (images, PDFs, documents)</small>
                                         </div>
                                         
                                         <div class="text-end">
@@ -258,6 +335,80 @@
                     <p t-if="error_description"><t t-esc="error_description"/></p>
                     <hr/>
                     <p class="mb-0">Please try again or contact support if the problem persists.</p>
+                </div>
+            </div>
+        </t>
+    </template>
+
+    <!-- Portal Reschedule Appointment Page -->
+    <template id="portal_reschedule_appointment" name="Reschedule Appointment">
+        <t t-call="portal.portal_layout">
+            <style>
+                .btn-primary, .btn-secondary {
+                    background-color: #38a3a5 !important;
+                    border-color: #38a3a5 !important;
+                    color: #ffffff !important;
+                }
+                .btn-primary:hover, .btn-secondary:hover {
+                    background-color: #2d8284 !important;
+                    border-color: #2d8284 !important;
+                }
+            </style>
+            
+            <div class="container mt-3">
+                <!-- Back button -->
+                <div class="mb-3">
+                    <a t-attf-href="/my/appointments/#{appointment.id}" class="btn btn-secondary">
+                        <i class="fa fa-arrow-left"/> Back to Appointment
+                    </a>
+                </div>
+                
+                <div class="row">
+                    <div class="col-lg-8">
+                        <div class="card">
+                            <div class="card-header">
+                                <h3>Reschedule Appointment</h3>
+                            </div>
+                            <div class="card-body">
+                                <div class="alert alert-info mb-3">
+                                    <strong>Current Appointment:</strong><br/>
+                                    <strong>Service:</strong> <t t-esc="appointment.service_id.name"/><br/>
+                                    <strong>Current Date:</strong> <t t-esc="appointment.start_datetime" t-options="{'widget': 'datetime'}"/>
+                                </div>
+                                
+                                <form method="POST" t-attf-action="/my/appointments/#{appointment.id}/reschedule">
+                                    <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+                                    
+                                    <div class="mb-3">
+                                        <label class="form-label" for="new_datetime">Select New Date &amp; Time</label>
+                                        <input type="datetime-local" class="form-control" id="new_datetime" name="start_datetime" required="required"/>
+                                        <small class="form-text text-muted">Choose a new date and time for your appointment</small>
+                                    </div>
+                                    
+                                    <div class="text-end">
+                                        <a t-attf-href="/my/appointments/#{appointment.id}" class="btn btn-secondary">Cancel</a>
+                                        <button type="submit" class="btn btn-primary">Confirm Reschedule</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-4">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5>Appointment Details</h5>
+                            </div>
+                            <div class="card-body">
+                                <p><strong>Service:</strong> <t t-esc="appointment.service_id.name"/></p>
+                                <p><strong>Duration:</strong> <t t-esc="appointment.duration_minutes"/> minutes</p>
+                                <p><strong>Customer:</strong> <t t-esc="appointment.partner_id.name"/></p>
+                                <div t-if="appointment.service_id.description">
+                                    <h6>Service Description:</h6>
+                                    <t t-esc="appointment.service_id.description"/>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </t>

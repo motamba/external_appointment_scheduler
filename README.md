@@ -1,222 +1,149 @@
 # External Appointment Scheduler
 
+[![License: LGPL-3](https://img.shields.io/badge/license-LGPL--3-blue)](https://www.gnu.org/licenses/lgpl-3.0)
+[![Odoo Version](https://img.shields.io/badge/Odoo-18%20%7C%2019-714B67)](https://www.odoo.com)
+
 ## Overview
 
-The External Appointment Scheduler module integrates Odoo with external calendar/booking APIs (Google Calendar, Calendly) to provide a seamless customer-facing appointment booking experience through the Odoo portal.
+**External Appointment Scheduler** is a full-featured Odoo module that integrates Odoo with external calendar providers (Google Calendar, other providers via adapters) and provides a customer-facing portal for booking, rescheduling and managing appointments. Designed for Odoo 18 and 19 Community editions.
 
-## Features
+✓ Optional demo services and example configuration to accelerate testing and deployment.
 
-- **Google Calendar Integration**: OAuth2-based integration with real-time sync
-- **Portal Booking**: Customer-facing interface for viewing availability and booking appointments
-- **OWL Components**: Modern, responsive calendar and booking form components
-- **Two-Way Sync**: Automatic synchronization between Odoo and external calendars
-- **Service Management**: Define services with durations, pricing, and booking rules
-- **Notifications**: Automated email confirmations and reminders
-- **Webhook Support**: Real-time updates via webhooks
-- **Admin Interface**: Comprehensive backend for managing appointments and configurations
+## Key Features
+
+✓ Manual & portal-driven bookings and rescheduling
+
+✓ Two-way synchronization with external calendars (Google Calendar adapter included)
+
+✓ OWL-based portal components (calendar, slot picker, booking form) and vanilla JS fallbacks
+
+✓ Email notifications for lifecycle events (confirmation, reminder, reschedule, cancel, checked-in, completed, no-show)
+
+✓ Webhook support and background cron jobs for synchronization and reminders
+
+✓ Configurable cancellation/reschedule rules, buffer times and capacities per service
+
+✓ Access-control rules separating portal users from internal staff
+
+## Screenshots
+
+![Booking Calendar](static/description/screenshot_booking.png)
+![Portal My Appointments](static/description/screenshot_services.png)
 
 ## Installation
 
-### Prerequisites
+1. Copy the module folder into your Odoo `addons` / `custom_modules` path.
+2. Install Python dependencies if you plan to enable Google Calendar integration:
 
-1. **Python Dependencies**:
 ```bash
 pip install google-auth google-auth-oauthlib google-auth-httplib2 google-api-python-client cryptography
 ```
 
-2. **Google Cloud Setup**:
-   - Create a Google Cloud Project
-   - Enable Google Calendar API
-   - Create OAuth2 credentials (Web application)
-   - Configure authorized redirect URIs
-
-3. **Odoo Requirements**:
-   - Odoo 19.0 or higher
-   - HTTPS enabled (required for OAuth callbacks)
-
-### Installation Steps
-
-1. Copy the module to your Odoo addons directory:
-```bash
-cp -r external_appointment_scheduler /path/to/odoo/custom_modules/
-```
-
-2. Update the addons list:
-   - Go to Apps menu
-   - Click "Update Apps List"
-
-3. Install the module:
-   - Search for "External Appointment Scheduler"
-   - Click "Install"
+3. Restart Odoo and update the Apps list.
+4. Install *External Appointment Scheduler* from Apps.
 
 ## Configuration
 
-### 1. Google Calendar Setup
+### Initial Setup
 
-1. Navigate to **Settings → Appointments → External Calendar Configuration**
-2. Create a new configuration:
-   - **Name**: e.g., "Google Calendar - Main"
-   - **Provider**: Select "Google Calendar"
-   - **Client ID**: Your Google OAuth Client ID
-   - **Client Secret**: Your Google OAuth Client Secret
+1. Navigate to **Settings → Appointments → External Calendar Configuration** and create a calendar config.
+2. Set OAuth credentials (Client ID / Client Secret) or use a secure environment-backed secret store for production.
+3. Create Services (Appointments → Configuration → Services): duration, buffer, capacity, cancellation/reschedule rules and calendar mapping.
 
-3. Click "Connect with Google" to authorize access
-4. Configure webhook URL in Google Cloud Console
+### Scheduled Jobs & Reminders
 
-### 2. Service Configuration
-
-1. Go to **Appointments → Configuration → Services**
-2. Create services:
-   - **Name**: Service name (e.g., "Consultation")
-   - **Duration**: Duration in minutes
-   - **Buffer**: Buffer time after appointment
-   - **Price**: Service price (optional)
-   - **Booking Rules**: Min/max lead times, cancellation policy
-
-### 3. Booking Rules
-
-Navigate to **Settings → Appointments** to configure:
-- Default working hours
-- Minimum lead time before booking
-- Maximum advance booking period
-- Cancellation and rescheduling policies
+- Cron jobs exist to send reminders and to synchronize with configured external calendars. Adjust frequency under **Settings → Technical → Automation → Scheduled Actions**.
 
 ## Usage
 
-### For Customers (Portal)
+### Portal (Customers)
 
-1. **View Services**: Browse available appointment services
-2. **Check Availability**: Select a service and view available time slots
-3. **Book Appointment**: Choose a slot and fill in required information
-4. **Manage Bookings**: View, cancel, or reschedule appointments from portal
+Customers may create, reschedule, and cancel appointments (subject to service rules) via the portal UI. Portal actions are recorded and notifications sent according to templates in `data/mail_templates.xml`.
 
-### For Administrators
+### Back Office
 
-1. **View Appointments**: Access all appointments from Appointments menu
-2. **Manual Booking**: Create appointments on behalf of customers
-3. **Manage Sync**: Monitor synchronization status
-4. **Reports**: View booking analytics and reports
+Administrators and managers can view and manage all appointments, trigger manual syncs, and review logs.
 
 ## API Endpoints
 
-### Availability
+Availability example:
+
 ```
-GET /api/appointments/availability?service_id=1&date_from=2025-12-10&date_to=2025-12-17
+GET /api/appointments/availability?service_id=1&date_from=2026-02-14&date_to=2026-02-21
 ```
 
-### Book Appointment
+Book appointment example:
+
 ```
 POST /api/appointments/book
 Content-Type: application/json
 
 {
   "service_id": 1,
-  "start_datetime": "2025-12-10T09:00:00Z",
+  "start_datetime": "2026-02-21T09:00:00Z",
   "partner_id": 10,
-  "notes": "First consultation"
+  "notes": "Consultation"
 }
 ```
 
-### Cancel Appointment
-```
-PUT /api/appointments/<id>/cancel
-```
+## Technical Details
 
-## Webhook Configuration
+### Models
+- `external.appointment` — Core appointment model
+- `external.appointment.service` — Service definitions
 
-### Google Calendar Webhook
-
-1. Configure webhook URL: `https://yourdomain.com/webhook/calendar/google`
-2. Set up Google Calendar watch channel
-3. Webhook will automatically process calendar changes
+### Services
+- Adapters for external calendar providers are located under `adapters/`
+- Cron jobs and synchronization logic under `data/cron_jobs.xml` and `models/`
 
 ## Troubleshooting
 
 ### Common Issues
 
 **OAuth Connection Fails**:
-- Verify Client ID and Secret are correct
-- Ensure redirect URI is configured in Google Cloud Console
-- Check that HTTPS is enabled
+- Verify Client ID and Secret and the configured redirect URIs in the provider console.
 
-**Appointments Not Syncing**:
-- Check webhook configuration
-- Verify token hasn't expired (refresh from config)
-- Check system logs for API errors
+**Emails Not Sent**:
+- Ensure the Odoo outgoing mail server is configured and working.
 
-**Double Booking Occurs**:
-- Ensure proper calendar is selected for service
-- Check for race conditions in high-traffic scenarios
-- Verify buffer times are configured
+**Portal Action Denied**:
+- Check record rules in `security/security.xml` and that the portal user matches `portal_user_id` on the record.
 
-### Logs
+## FAQ
 
-Check Odoo logs for detailed error messages:
-```bash
-tail -f /var/log/odoo/odoo-server.log | grep appointment
-```
+### Can I use other calendar providers besides Google?
+Yes. The module is adapter-based — add an adapter in `adapters/` to support another provider.
 
-## Development
+### Are appointments visible to portal users immediately after booking?
+Yes — portal users can view their appointments in the My Appointments area.
 
-### Extending Adapters
+## Compatibility
 
-To add support for a new calendar provider:
-
-1. Create a new adapter class extending `BaseAdapter`:
-```python
-from odoo.addons.external_appointment_scheduler.adapters.base_adapter import BaseAdapter
-
-class CustomAdapter(BaseAdapter):
-    def get_available_slots(self, service, date_from, date_to, constraints):
-        # Implementation
-        pass
-```
-
-2. Register the adapter in the provider selection
-
-### Adding Custom Fields
-
-Add custom fields to appointments by inheriting the model:
-```python
-class ExternalAppointment(models.Model):
-    _inherit = 'external.appointment'
-    
-    custom_field = fields.Char(string='Custom Field')
-```
-
-## Security
-
-- OAuth tokens are encrypted at rest
-- CSRF protection on all endpoints
-- Webhook signature validation
-- Portal access controls
-- Rate limiting on API endpoints
+- **Odoo Versions**: 18, 19
+- **Editions**: Community (CE).
+- **OS**: Windows, Linux, macOS
 
 ## Support
 
-For issues, questions, or contributions:
-- **Documentation**: See `/doc` directory
-- **Issues**: Report bugs via issue tracker
-- **Email**: support@yourcompany.com
-
-## License
-
-LGPL-3
-
-## Credits
-
-**Author**: Your Company  
-**Maintainer**: Your Company  
-**Contributors**: 
-- Developer Name
+For issues or paid support:
+- Email: tambamodou68@gmail.com
+- Documentation: see `/doc`
 
 ## Changelog
 
-### Version 19.0.1.0.0 (2025-12-06)
-- Initial release
-- Google Calendar integration
-- Portal booking interface
-- OWL calendar components
-- Two-way synchronization
-- Email notifications
-- Webhook support
+### Version 0.1 (2026-02-14)
+- Initial release: booking portal, Google Calendar adapter, OWL components, email templates, cron jobs, basic logging.
+
+## License
+
+This module is licensed under **LGPL-3**. See `LICENSE` for full text.
+
+## Credits
+
+**Author**: Modou Tamba  
+**Maintainer**: Modou Tamba
+
+---
+
+© 2026 Modou Tamba. All rights reserved.
+## API Endpoints

@@ -2,8 +2,8 @@
 
 import { Component, useState, onWillStart } from "@odoo/owl";
 import { useService } from "@web/core/utils/hooks";
-import { SlotPicker } from "../slot_picker/slot_picker";
-import { BookingForm } from "../booking_form/booking_form";
+import { SlotPicker } from "../slot_picker/slot_picker_owl";
+import { BookingForm } from "../booking_form/booking_form_owl";
 
 export class AppointmentCalendar extends Component {
     static template = "external_appointment_scheduler.AppointmentCalendar";

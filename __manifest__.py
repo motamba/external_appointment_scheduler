@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 {
     'name': 'External Appointment Scheduler',
-    'version': '19.0.1.0.0',
+    'version': '0.1',
     'category': 'Services/Appointments',
     'summary': 'Integrate Odoo with external calendar APIs for customer appointment booking',
     'description': """
@@ -32,8 +32,7 @@
         * OAuth2 credentials (Client ID & Secret)
         * HTTPS domain for webhook callbacks
     """,
-    'author': 'Your Company',
-    'website': 'https://www.yourcompany.com',
+    'author': 'Modou Tamba',
     'license': 'LGPL-3',
     'depends': [
         'base',
@@ -60,6 +59,8 @@
         # Data
         'data/mail_templates.xml',
         'data/cron_jobs.xml',
+        # Demo-like example services loaded on install for easier testing
+        'demo/appointment_services_demo.xml',
         
         # Views
         'views/external_appointment_views.xml',
@@ -72,9 +73,7 @@
         # Wizards
         'wizards/appointment_reschedule_wizard_views.xml',
     ],
-    'demo': [
-        'demo/appointment_services_demo.xml',
-    ],
+    'demo': [],
     'assets': {
         'web.assets_backend': [
             # OWL Components for backend
@@ -92,11 +91,16 @@
         ],
     },
     'images': [
-        'static/description/icon.png',
         'static/description/banner.png',
+        'static/description/screenshot_booking.png',
+        'static/description/screenshot_services.png',
+        'static/description/screenshot_calendar.png',
+        'static/description/screenshot_config.png',
     ],
     'installable': True,
     'application': True,
     'auto_install': False,
-    'post_init_hook': 'post_init_hook',
+    'price': 149.00,
+    'currency': 'EUR',
+    'support': 'tambamodou68@gmail.com',
 }

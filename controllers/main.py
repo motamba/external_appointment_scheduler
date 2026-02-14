@@ -4,6 +4,7 @@ from odoo import http, _
 from odoo.http import request
 from datetime import datetime, timedelta
 import json
+import base64
 import logging
 
 _logger = logging.getLogger(__name__)
@@ -124,9 +125,9 @@ class AppointmentAPIController(http.Controller):
             service_id = payload.get('service_id') or payload.get('service') or kw.get('service_id') or kw.get('service')
             start_datetime = payload.get('start') or payload.get('start_datetime') or kw.get('start_datetime') or kw.get('start')
             partner_id = payload.get('partner_id') or kw.get('partner_id')
-            partner_name = payload.get('customer_name') or payload.get('partner_name') or kw.get('partner_name') or kw.get('name')
-            partner_email = payload.get('customer_email') or payload.get('partner_email') or kw.get('partner_email') or kw.get('email')
-            partner_phone = payload.get('customer_phone') or payload.get('partner_phone') or kw.get('partner_phone') or kw.get('phone')
+            partner_name = payload.get('customer_name') or payload.get('partner_name') or kw.get('customer_name') or kw.get('partner_name') or kw.get('name')
+            partner_email = payload.get('customer_email') or payload.get('partner_email') or kw.get('customer_email') or kw.get('partner_email') or kw.get('email')
+            partner_phone = payload.get('customer_phone') or payload.get('partner_phone') or kw.get('customer_phone') or kw.get('partner_phone') or kw.get('phone')
             notes = payload.get('notes') or kw.get('notes')
 
             # Debug logging: record what was received to help diagnose missing partner fields
@@ -158,6 +159,9 @@ class AppointmentAPIController(http.Controller):
             # Get or create partner
             if partner_id:
                 partner = request.env['res.partner'].sudo().browse(int(partner_id))
+                # Update partner phone if provided
+                if partner_phone and partner.phone != partner_phone:
+                    partner.write({'phone': partner_phone})
             elif partner_email:
                 # Search for existing partner
                 partner = request.env['res.partner'].sudo().search([
@@ -171,6 +175,10 @@ class AppointmentAPIController(http.Controller):
                         'email': partner_email,
                         'phone': partner_phone,
                     })
+                else:
+                    # Update existing partner phone if provided
+                    if partner_phone and partner.phone != partner_phone:
+                        partner.write({'phone': partner_phone})
             else:
                 # Provide more context in the error to aid debugging (safe: only keys, not full values)
                 err = {
@@ -205,6 +213,24 @@ class AppointmentAPIController(http.Controller):
                 appointment_vals['portal_user_id'] = request.env.user.id
             
             appointment = request.env['external.appointment'].sudo().create(appointment_vals)
+
+            # Process file attachments if any
+            if request.httprequest.files:
+                IrAttachment = request.env['ir.attachment'].sudo()
+                # Get all files from the 'attachments' field (multiple files)
+                files = request.httprequest.files.getlist('attachments')
+                for file_upload in files:
+                    if file_upload and file_upload.filename:
+                        # Read file data
+                        file_data = file_upload.read()
+                        # Create attachment
+                        IrAttachment.create({
+                            'name': file_upload.filename,
+                            'datas': base64.b64encode(file_data),
+                            'res_model': 'external.appointment',
+                            'res_id': appointment.id,
+                            'type': 'binary',
+                        })
 
             # Confirm appointment
             appointment.action_confirm()

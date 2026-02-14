@@ -231,12 +231,54 @@ class ExternalAppointment(models.Model):
         return appointments
     
     def write(self, vals):
-        """Override write to sync changes with provider."""
+        """Override write to sync changes with provider and send email notifications."""
+        # Track status changes for email notifications
+        old_status = {rec.id: rec.status for rec in self}
+        old_datetime = {rec.id: rec.start_datetime for rec in self}
+        
         # Track if we need to sync
         sync_fields = {'start_datetime', 'end_datetime', 'service_id', 'partner_id', 'notes', 'status'}
         needs_sync = bool(set(vals.keys()) & sync_fields)
         
         result = super(ExternalAppointment, self).write(vals)
+        
+        # Send email notifications for status or datetime changes
+        for appointment in self:
+            # Status changed to cancelled - send cancellation email
+            if 'status' in vals and old_status.get(appointment.id) != 'cancelled' and appointment.status == 'cancelled':
+                template = self.env.ref('external_appointment_scheduler.email_template_appointment_cancelled', raise_if_not_found=False)
+                if template:
+                    template.sudo().send_mail(appointment.id, force_send=False)
+            
+            # Status changed to checked_in - send check-in email
+            elif 'status' in vals and old_status.get(appointment.id) != 'checked_in' and appointment.status == 'checked_in':
+                template = self.env.ref('external_appointment_scheduler.email_template_appointment_checked_in', raise_if_not_found=False)
+                if template:
+                    template.sudo().send_mail(appointment.id, force_send=False)
+            
+            # Status changed to completed - send completion email
+            elif 'status' in vals and old_status.get(appointment.id) != 'completed' and appointment.status == 'completed':
+                template = self.env.ref('external_appointment_scheduler.email_template_appointment_completed', raise_if_not_found=False)
+                if template:
+                    template.sudo().send_mail(appointment.id, force_send=False)
+            
+            # Status changed to no_show - send no-show email
+            elif 'status' in vals and old_status.get(appointment.id) != 'no_show' and appointment.status == 'no_show':
+                template = self.env.ref('external_appointment_scheduler.email_template_appointment_no_show', raise_if_not_found=False)
+                if template:
+                    template.sudo().send_mail(appointment.id, force_send=False)
+            
+            # Start datetime changed (rescheduled)
+            elif 'start_datetime' in vals and old_datetime.get(appointment.id) != appointment.start_datetime and appointment.status not in ['cancelled', 'draft']:
+                template = self.env.ref('external_appointment_scheduler.email_template_appointment_rescheduled', raise_if_not_found=False)
+                if template:
+                    template.sudo().send_mail(appointment.id, force_send=False)
+            
+            # Status changed to confirmed - send confirmation email
+            elif 'status' in vals and old_status.get(appointment.id) == 'draft' and appointment.status == 'confirmed':
+                template = self.env.ref('external_appointment_scheduler.mail_template_appointment_confirmation', raise_if_not_found=False)
+                if template:
+                    template.sudo().send_mail(appointment.id, force_send=False)
         
         # Sync with provider if necessary
         if needs_sync:
@@ -293,7 +335,7 @@ class ExternalAppointment(models.Model):
         """Check if appointment can be cancelled."""
         now = fields.Datetime.now()
         for appointment in self:
-            if appointment.status in ['cancelled', 'completed', 'no_show']:
+            if appointment.status in ['cancelled', 'completed', 'no_show', 'checked_in']:
                 appointment.can_cancel = False
             elif not appointment.service_id:
                 appointment.can_cancel = False

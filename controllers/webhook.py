@@ -32,7 +32,6 @@ class CalendarWebhookController(http.Controller):
             config = None
             if config_id:
                 config = request.env['external.calendar.config'].sudo().browse(int(config_id))
-            # Fallback to channel lookup if config not found
             if not config or not config.exists():
                 config = request.env['external.calendar.config'].sudo().search([
                     ('webhook_channel_id', '=', channel_id)
@@ -40,23 +39,18 @@ class CalendarWebhookController(http.Controller):
             
             if not config or not config.exists():
                 _logger.warning(f"No configuration found for channel {channel_id} or id {config_id}")
-                return "OK"  # Return OK to avoid retries
+                return "OK"
             
             # Validate token
             if token != config.webhook_secret:
                 _logger.warning(f"Invalid webhook token for channel {channel_id}")
                 return ("Unauthorized", 401)
             
-            # Process based on resource state
             if resource_state == 'sync':
-                # Initial sync message
                 _logger.info("Google Calendar sync message received")
                 
             elif resource_state == 'exists':
-                # Calendar has changes
                 _logger.info("Google Calendar has changes, triggering sync")
-                
-                # Trigger sync in background
                 request.env['external.appointment'].sudo()._process_google_webhook(config, resource_id)
             
             return "OK"
@@ -75,8 +69,6 @@ class CalendarWebhookController(http.Controller):
             # Get payload
             payload = request.httprequest.get_data()
             signature = request.httprequest.headers.get('Calendly-Webhook-Signature')
-            
-            # Parse JSON payload
             data = json.loads(payload)
             
             _logger.info(f"Calendly webhook received: {data.get('event')}")
@@ -95,8 +87,6 @@ class CalendarWebhookController(http.Controller):
                 _logger.warning("No active Calendly configuration found")
                 return "OK"
             
-            # Validate signature (implement actual validation)
-            # This is a placeholder - implement actual signature validation
             
             # Process event
             event_type = data.get('event')

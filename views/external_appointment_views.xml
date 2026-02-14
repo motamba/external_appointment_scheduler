@@ -9,6 +9,8 @@
             <list string="Appointments" decoration-info="status=='draft'" decoration-success="status=='confirmed'" decoration-muted="status=='cancelled'">
                 <field name="name"/>
                 <field name="partner_id"/>
+                <field name="customer_email"/>
+                <field name="customer_phone"/>
                 <field name="service_id"/>
                 <field name="start_datetime"/>
                 <field name="duration_minutes" widget="integer"/>
